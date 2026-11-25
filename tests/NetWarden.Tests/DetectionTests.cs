@@ -164,17 +164,28 @@ public class DetectionTests
         var port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
         _ = Task.Run(async () =>
         {
-            try
+            // Each connection is served on its own and its errors stay with it. The port scan's quick
+            // connect-and-close makes the banner write fail on Windows (connection reset); that must not
+            // stop the listener before the service-detection connection arrives.
+            while (true)
             {
-                while (true)
+                System.Net.Sockets.TcpClient c;
+                try { c = await listener.AcceptTcpClientAsync(); }
+                catch (Exception) { return; } // listener stopped
+                _ = Task.Run(async () =>
                 {
-                    using var c = await listener.AcceptTcpClientAsync();
-                    var s = c.GetStream();
-                    await s.WriteAsync(Encoding.ASCII.GetBytes("220 test FTP ready\r\n"));
-                    await Task.Delay(50);
-                }
+                    using (c)
+                    {
+                        try
+                        {
+                            var s = c.GetStream();
+                            await s.WriteAsync(Encoding.ASCII.GetBytes("220 test FTP ready\r\n"));
+                            await Task.Delay(500);
+                        }
+                        catch (Exception) { }
+                    }
+                });
             }
-            catch (Exception) { }
         });
         try
         {
