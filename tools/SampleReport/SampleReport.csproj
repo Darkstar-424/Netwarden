@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Regenerates samples/ from the fictional Nmap import in tests/NetWarden.Tests/TestData. Not part of the shipped exe. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(NwOffline)' == 'true'">
+    <DefineConstants>$(DefineConstants);NW_OFFLINE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NetWarden.Core\NetWarden.Core.csproj" />
+    <ProjectReference Include="..\..\src\NetWarden.Checks\NetWarden.Checks.csproj" />
+    <ProjectReference Include="..\..\src\NetWarden.Data\NetWarden.Data.csproj" />
+    <ProjectReference Include="..\..\src\NetWarden.Reporting\NetWarden.Reporting.csproj" />
+  </ItemGroup>
+</Project>

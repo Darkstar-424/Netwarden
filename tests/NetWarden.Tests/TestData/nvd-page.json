@@ -1,0 +1,15 @@
+{
+  "resultsPerPage": 2, "startIndex": 0, "totalResults": 2, "format": "NVD_CVE", "version": "2.0", "timestamp": "2026-11-25T10:00:00.000",
+  "vulnerabilities": [
+    { "cve": {
+        "id": "CVE-2023-48795", "published": "2023-12-18T16:15:10.897", "lastModified": "2024-05-01T17:15:00.000", "vulnStatus": "Modified",
+        "descriptions": [ { "lang": "es", "value": "Descripción" }, { "lang": "en", "value": "The SSH transport protocol allows remote attackers to bypass integrity checks (Terrapin)." } ],
+        "metrics": { "cvssMetricV31": [
+          { "source": "nvd@nist.gov", "type": "Primary", "cvssData": { "version": "3.1", "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N", "baseScore": 5.9, "baseSeverity": "MEDIUM" } } ] },
+        "configurations": [ { "nodes": [ { "operator": "OR", "negate": false, "cpeMatch": [
+          { "vulnerable": true, "criteria": "cpe:2.3:a:openbsd:openssh:*:*:*:*:*:*:*:*", "versionEndExcluding": "9.6", "matchCriteriaId": "A" },
+          { "vulnerable": false, "criteria": "cpe:2.3:o:linux:linux_kernel:-:*:*:*:*:*:*:*", "matchCriteriaId": "B" } ] } ] } ],
+        "references": [ { "url": "https://terrapin-attack.com/", "source": "x" } ] } },
+    { "cve": { "id": "CVE-2099-0001", "vulnStatus": "Rejected", "descriptions": [ { "lang": "en", "value": "** REJECT **" } ] } }
+  ]
+}

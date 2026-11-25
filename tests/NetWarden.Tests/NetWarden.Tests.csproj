@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>NetWarden.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NetWarden.Core\NetWarden.Core.csproj" />
+    <ProjectReference Include="..\..\src\NetWarden.Checks\NetWarden.Checks.csproj" />
+    <ProjectReference Include="..\..\src\NetWarden.Data\NetWarden.Data.csproj" />
+    <ProjectReference Include="..\..\src\NetWarden.Reporting\NetWarden.Reporting.csproj" />
+    <ProjectReference Include="..\..\src\NetWarden.UI\NetWarden.UI.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="TestData\**\*" />
+  </ItemGroup>
+
+  <!-- Normal build: real xUnit. -->
+  <ItemGroup Condition="'$(NwOffline)' != 'true'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+    <PackageReference Include="xunit" Version="2.9.*" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.*" />
+    <Compile Remove="OfflineRunner\**" />
+  </ItemGroup>
+  <!-- NwOffline=true: compiles the same tests against a tiny xUnit-compatible shim and runs them as an exe
+       (used only where NuGet is unreachable). -->
+  <PropertyGroup Condition="'$(NwOffline)' == 'true'">
+    <OutputType>Exe</OutputType>
+    <IsTestProject>false</IsTestProject>
+    <DefineConstants>$(DefineConstants);NW_OFFLINE</DefineConstants>
+  </PropertyGroup>
+</Project>
