@@ -22,6 +22,9 @@
     <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
   <ItemGroup>
+    <Using Include="System.IO" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\NetWarden.UI\NetWarden.UI.csproj" />
   </ItemGroup>
   <ItemGroup>
