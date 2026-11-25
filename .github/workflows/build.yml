@@ -1,0 +1,26 @@
+name: build
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Test
+        run: dotnet test tests/NetWarden.Tests/NetWarden.Tests.csproj -c Release
+      - name: Publish portable exe
+        run: dotnet publish src/NetWarden.App/NetWarden.App.csproj -c Release -o dist
+      - name: Sample PDF report
+        run: dotnet run --project tools/SampleReport/SampleReport.csproj -c Release -- tests/NetWarden.Tests/TestData/sample-nmap.xml dist/samples --pdf
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NetWarden-win-x64
+          path: |
+            dist/NetWarden.exe
+            dist/samples/
