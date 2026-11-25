@@ -129,17 +129,20 @@ public sealed class SettingsViewModel : ObservableObject
         try
         {
             _s.History.Audit("cve-update-start", _s.CurrentUser);
+            var nvd = new NvdClient(_s.Settings.NvdApiKey);
             await Task.Run(async () =>
             {
-                await new NvdClient(_s.Settings.NvdApiKey).SyncAsync(_s.Cves, progress, _updateCts.Token);
+                await nvd.SyncAsync(_s.Cves, progress, _updateCts.Token);
                 await new KevClient().SyncAsync(_s.Cves, progress, _updateCts.Token);
             });
-            CveProgress = "Update complete.";
+            CveProgress = nvd.ApiKeyRejected
+                ? "Update complete, but NVD didn't accept your API key, so it ran at the slower keyless speed. Check the key matches the one in your NVD email exactly and that you clicked the activation link."
+                : "Update complete.";
             _s.History.Audit("cve-update-end", _s.CurrentUser);
         }
         catch (OperationCanceledException)
         {
-            CveProgress = "Update cancelled. Data downloaded so far was kept; the next update continues from the start.";
+            CveProgress = "Update cancelled. Data downloaded so far was kept; the next update picks up where this one stopped.";
         }
         catch (Exception ex) when (ex is FeedException or HttpRequestException or IOException)
         {

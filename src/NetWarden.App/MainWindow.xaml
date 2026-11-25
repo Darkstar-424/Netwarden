@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:NetWarden.UI.ViewModels;assembly=NetWarden.UI"
         xmlns:v="clr-namespace:NetWarden.App.Views"
-        Title="NetWarden 1.0.1" Width="1320" Height="860" MinWidth="980" MinHeight="620"
+        Title="NetWarden 1.0.2" Width="1320" Height="860" MinWidth="980" MinHeight="620"
         WindowStartupLocation="CenterScreen" Icon="Assets/netwarden.ico"
         Background="{DynamicResource Brush.Window}" Foreground="{DynamicResource Brush.Text}"
         FontFamily="{StaticResource Font.Ui}" FontSize="14"

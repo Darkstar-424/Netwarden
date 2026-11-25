@@ -46,7 +46,9 @@ public sealed class NvdClient
     private const int PageSize = 2000;
 
     private readonly HttpClient _http;
-    private readonly string? _apiKey;
+    private string? _apiKey;
+    /// <summary>Set when NVD refused the API key and the download carried on without it.</summary>
+    public bool ApiKeyRejected { get; private set; }
 
     public NvdClient(string? apiKey = null, HttpClient? http = null)
     {
@@ -75,7 +77,10 @@ public sealed class NvdClient
         }
         else
         {
-            total = await DownloadAsync(db, "", progress, ct).ConfigureAwait(false);
+            // A first full download takes a while; if it is interrupted, the next attempt resumes where it stopped.
+            int resumeAt = int.TryParse(db.GetMeta("nvd_resume_index"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var r) ? r : 0;
+            total = await DownloadAsync(db, "", progress, ct, resumeAt, i => db.SetMeta("nvd_resume_index", i.ToString(CultureInfo.InvariantCulture))).ConfigureAwait(false);
+            db.SetMeta("nvd_resume_index", "0");
         }
         db.SetMeta("last_nvd_sync", started.ToString("o", CultureInfo.InvariantCulture));
         return total;
@@ -83,29 +88,41 @@ public sealed class NvdClient
 
     private static string Fmt(DateTimeOffset d) => Uri.EscapeDataString(d.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture));
 
-    private async Task<long> DownloadAsync(CveDatabase db, string filter, IProgress<FeedProgress>? progress, CancellationToken ct)
+    private async Task<long> DownloadAsync(CveDatabase db, string filter, IProgress<FeedProgress>? progress, CancellationToken ct,
+        int start = 0, Action<int>? checkpoint = null)
     {
-        int start = 0;
-        long total = -1, done = 0;
+        long total = -1, done = start;
         do
         {
             var uri = new Uri($"{BaseUrl}?resultsPerPage={PageSize}&startIndex={start}{filter}");
             FeedHttp.RequireHttps(uri);
-            using var req = new HttpRequestMessage(HttpMethod.Get, uri);
-            if (_apiKey != null) req.Headers.Add("apiKey", _apiKey);
             HttpResponseMessage resp;
             int attempt = 0;
             while (true)
             {
-                resp = await _http.SendAsync(Clone(req), ct).ConfigureAwait(false);
+                using var req = new HttpRequestMessage(HttpMethod.Get, uri);
+                if (_apiKey != null) req.Headers.TryAddWithoutValidation("apiKey", _apiKey);
+                resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
                 if (resp.IsSuccessStatusCode) break;
+                // NVD answers 404 when the apiKey header holds a key it doesn't recognise (mistyped, or not yet
+                // activated from the confirmation email). Carry on without the key rather than failing.
+                if ((int)resp.StatusCode == 404 && _apiKey != null)
+                {
+                    resp.Dispose();
+                    _apiKey = null;
+                    ApiKeyRejected = true;
+                    progress?.Report(new FeedProgress("NVD", done, total, "NVD didn't accept the API key - continuing without it (slower)."));
+                    await Task.Delay(Delay, ct).ConfigureAwait(false);
+                    continue;
+                }
                 if ((int)resp.StatusCode is 403 or 429 or 503 && attempt++ < 5)
                 {
                     resp.Dispose();
                     await Task.Delay(TimeSpan.FromSeconds(30 * attempt), ct).ConfigureAwait(false);
                     continue;
                 }
-                throw new FeedException($"NVD returned HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}.");
+                var detail = resp.Headers.TryGetValues("message", out var msg) ? " " + string.Join(" ", msg) : "";
+                throw new FeedException($"NVD returned HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}.{detail}");
             }
             await using (var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false))
             {
@@ -115,18 +132,12 @@ public sealed class NvdClient
                 done += page.Items.Count;
                 start += PageSize;
             }
+            checkpoint?.Invoke(start);
             resp.Dispose();
             progress?.Report(new FeedProgress("NVD", done, total, $"Downloaded {done:N0} of {total:N0} CVE records"));
             if (start < total) await Task.Delay(Delay, ct).ConfigureAwait(false);
         } while (start < total);
         return done;
-    }
-
-    private static HttpRequestMessage Clone(HttpRequestMessage r)
-    {
-        var c = new HttpRequestMessage(r.Method, r.RequestUri);
-        foreach (var h in r.Headers) c.Headers.TryAddWithoutValidation(h.Key, h.Value);
-        return c;
     }
 
     public sealed record Page(long TotalResults, List<CveImportRecord> Items);
