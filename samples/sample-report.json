@@ -1,0 +1,391 @@
+{
+  "id": "309d1bb8-0bf3-4a56-90e1-0b4cbc6af503",
+  "started": "2025-11-25T08:00:00+00:00",
+  "finished": "2025-11-25T08:03:20+00:00",
+  "profileName": "Imported from Nmap",
+  "scopeName": "Fictional lab network",
+  "targets": [],
+  "startedBy": "CORP\\it-admin",
+  "state": "Imported",
+  "hosts": [
+    {
+      "address": "192.168.1.10",
+      "isUp": true,
+      "hostName": "filesrv01.corp.example",
+      "macAddress": "00:15:5D:01:02:03",
+      "vendor": "Microsoft",
+      "discoveryMethod": "Nmap: arp-response",
+      "ports": [
+        {
+          "port": 23,
+          "protocol": "Tcp",
+          "state": "Open",
+          "service": {
+            "name": "telnet",
+            "product": "Microsoft Windows XP telnetd",
+            "banner": "Microsoft Windows XP telnetd",
+            "cpes": [],
+            "tls": false,
+            "facts": {}
+          }
+        },
+        {
+          "port": 445,
+          "protocol": "Tcp",
+          "state": "Open",
+          "service": {
+            "name": "microsoft-ds",
+            "banner": "",
+            "cpes": [],
+            "tls": false,
+            "facts": {
+              "nmap.smb-protocols": "\n  dialects: \n    NT LM 0.12 (SMBv1) [dangerous, but default]\n    2:0:2\n    3:1:1",
+              "smb1": "enabled",
+              "smb.signing": "enabled"
+            }
+          }
+        }
+      ],
+      "os": {
+        "family": "Windows",
+        "detail": "Microsoft Windows Server 2016",
+        "confidence": 96,
+        "basis": "Nmap OS detection"
+      },
+      "findings": [
+        {
+          "key": "svc.telnet|192.168.1.10|23|-",
+          "checkId": "svc.telnet",
+          "title": "Telnet is open",
+          "severity": "High",
+          "confidence": "Configuration",
+          "host": "192.168.1.10",
+          "hostName": "filesrv01.corp.example",
+          "port": 23,
+          "protocol": "Tcp",
+          "description": "Telnet sends usernames, passwords and everything typed in plain text. Anyone on the network path can read them. Telnet on routers, switches and IoT devices is also a common target for botnets.",
+          "evidence": "TCP 23 accepted a connection; banner: Microsoft Windows XP telnetd",
+          "cvss": 7.5,
+          "cves": [],
+          "kev": false,
+          "references": [],
+          "remediation": [
+            "Disable the Telnet service on the device and use SSH instead.",
+            "Windows: Disable-WindowsOptionalFeature -Online -FeatureName TelnetServer (older systems).",
+            "Network gear (e.g. Cisco): \u0027line vty 0 15\u0027 \u2192 \u0027transport input ssh\u0027.",
+            "If Telnet can\u0027t be disabled, restrict it to a management VLAN with firewall rules."
+          ],
+          "fixAction": "Turn off Telnet (use SSH)",
+          "status": "Open"
+        },
+        {
+          "key": "smb.signing|192.168.1.10|445|-",
+          "checkId": "smb.signing",
+          "title": "SMB signing is not required",
+          "severity": "Medium",
+          "confidence": "Configuration",
+          "host": "192.168.1.10",
+          "hostName": "filesrv01.corp.example",
+          "port": 445,
+          "protocol": "Tcp",
+          "description": "Without mandatory SMB signing, an attacker on the local network can relay or tamper with file-sharing traffic (NTLM relay attacks). Domain controllers require signing by default; other servers often don\u0027t.",
+          "evidence": "SMB2 NEGOTIATE response SecurityMode: signing enabled, not required (dialect ?).",
+          "cvss": 5.3,
+          "cves": [],
+          "kev": false,
+          "references": [
+            "https://learn.microsoft.com/troubleshoot/windows-server/networking/overview-server-message-block-signing"
+          ],
+          "remediation": [
+            "Group Policy \u203A Computer Configuration \u203A Windows Settings \u203A Security Settings \u203A Local Policies \u203A Security Options:",
+            "  \u0022Microsoft network server: Digitally sign communications (always)\u0022 = Enabled.",
+            "Or per server (admin PowerShell): Set-SmbServerConfiguration -RequireSecuritySignature $true -Force",
+            "Samba: set \u0027server signing = mandatory\u0027 in smb.conf.",
+            "Run gpupdate /force, then rescan."
+          ],
+          "fixAction": "Require SMB signing",
+          "status": "AcceptedRisk",
+          "statusNote": "Sample: accepted until the device is replaced in Q1."
+        },
+        {
+          "key": "smb.smbv1|192.168.1.10|445|-",
+          "checkId": "smb.smbv1",
+          "title": "SMBv1 is enabled",
+          "severity": "High",
+          "confidence": "Confirmed",
+          "host": "192.168.1.10",
+          "hostName": "filesrv01.corp.example",
+          "port": 445,
+          "protocol": "Tcp",
+          "description": "The server still accepts SMB version 1, a 30-year-old file-sharing protocol with serious design flaws. Worms and ransomware such as WannaCry and NotPetya spread through SMBv1. Modern Windows, macOS and Linux clients don\u0027t need it.",
+          "evidence": "SMB1 NEGOTIATE offering only \u0022NT LM 0.12\u0022 was accepted by the server.",
+          "cves": [],
+          "kev": false,
+          "references": [
+            "https://learn.microsoft.com/windows-server/storage/file-server/troubleshoot/detect-enable-and-disable-smbv1-v2-v3",
+            "https://www.cisa.gov/news-events/alerts/2017/03/16/smb-security-best-practices"
+          ],
+          "remediation": [
+            "Windows Server/PC (admin PowerShell): Set-SmbServerConfiguration -EnableSMB1Protocol $false -Force",
+            "Remove the feature completely: Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol (restart required).",
+            "Across a domain: Group Policy \u203A Computer Configuration \u203A Administrative Templates \u203A MS Security Guide \u203A Configure SMBv1 server = Disabled.",
+            "NAS / Samba devices: set the minimum SMB protocol to SMB2 (Samba: \u0027server min protocol = SMB2_10\u0027).",
+            "Rescan this host to confirm the finding is resolved."
+          ],
+          "fixAction": "Turn off SMBv1",
+          "status": "Open"
+        }
+      ]
+    },
+    {
+      "address": "192.168.1.20",
+      "isUp": true,
+      "discoveryMethod": "Nmap: syn-ack",
+      "ports": [
+        {
+          "port": 22,
+          "protocol": "Tcp",
+          "state": "Open",
+          "service": {
+            "name": "ssh",
+            "product": "OpenSSH",
+            "version": "8.2p1",
+            "banner": "OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 Ubuntu Linux; protocol 2.0",
+            "cpes": [
+              "cpe:2.3:a:openbsd:openssh:8.2:p1:*:*:*:*:*:*"
+            ],
+            "tls": false,
+            "facts": {}
+          }
+        },
+        {
+          "port": 443,
+          "protocol": "Tcp",
+          "state": "Open",
+          "service": {
+            "name": "http",
+            "product": "nginx",
+            "version": "1.18.0",
+            "banner": "nginx 1.18.0",
+            "cpes": [
+              "cpe:2.3:a:igor_sysoev:nginx:1.18.0:*:*:*:*:*:*:*",
+              "cpe:2.3:a:f5:nginx:1.18.0:*:*:*:*:*:*:*",
+              "cpe:2.3:a:nginx:nginx:1.18.0:*:*:*:*:*:*:*"
+            ],
+            "tls": true,
+            "facts": {
+              "http.scheme": "https",
+              "nmap.ssl-enum-ciphers": "\n  TLSv1.0: \n    ciphers: \n      TLS_RSA_WITH_3DES_EDE_CBC_SHA (rsa 2048) - C\n  TLSv1.2: \n    ciphers: \n      TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 (secp256r1) - A\n  least strength: C"
+            }
+          },
+          "tls": {
+            "protocols": [
+              "TLS 1.0",
+              "TLS 1.2"
+            ],
+            "ciphers": [
+              {
+                "id": 0,
+                "name": "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+                "protocol": "TLS 1.0",
+                "weak": true,
+                "forwardSecret": false
+              },
+              {
+                "id": 0,
+                "name": "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+                "protocol": "TLS 1.2",
+                "weak": false,
+                "forwardSecret": true
+              }
+            ]
+          }
+        }
+      ],
+      "os": {
+        "family": "Linux/Unix",
+        "detail": "Ubuntu",
+        "confidence": 66,
+        "basis": "Ubuntu in banner"
+      },
+      "findings": [
+        {
+          "key": "cve.version-match|192.168.1.20|22|CVE-2023-38408",
+          "checkId": "cve.version-match",
+          "title": "CVE-2023-38408 in OpenSSH 8.2p1",
+          "severity": "Critical",
+          "confidence": "Potential",
+          "host": "192.168.1.20",
+          "port": 22,
+          "protocol": "Tcp",
+          "description": "The PKCS#11 feature in ssh-agent in OpenSSH before 9.3p2 has an insufficiently trustworthy search path, leading to remote code execution if an agent is forwarded to an attacker-controlled system.",
+          "evidence": "Detected: ssh (OpenSSH 8.2p1)\nBanner: OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 Ubuntu Linux; protocol 2.0\nCPE: cpe:2.3:a:openbsd:openssh:8.2:p1:*:*:*:*:*:*\nVersion-based match: vendors sometimes back-port fixes without changing the version, so confirm against vendor advisories.",
+          "cvss": 9.8,
+          "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+          "cves": [
+            "CVE-2023-38408"
+          ],
+          "kev": false,
+          "references": [
+            "https://nvd.nist.gov/vuln/detail/CVE-2023-38408"
+          ],
+          "remediation": [
+            "Update OpenSSH to a version that fixes CVE-2023-38408 (see the vendor advisory in the references).",
+            "If the vendor back-ported the fix, mark this finding as a false positive with a note."
+          ],
+          "fixAction": "Update OpenSSH on 192.168.1.20",
+          "status": "Open"
+        },
+        {
+          "key": "cve.version-match|192.168.1.20|22|CVE-2021-41617",
+          "checkId": "cve.version-match",
+          "title": "CVE-2021-41617 in OpenSSH 8.2p1",
+          "severity": "High",
+          "confidence": "Potential",
+          "host": "192.168.1.20",
+          "port": 22,
+          "protocol": "Tcp",
+          "description": "sshd in OpenSSH 6.2 through 8.x before 8.8, when certain non-default configurations are used, allows privilege escalation.",
+          "evidence": "Detected: ssh (OpenSSH 8.2p1)\nBanner: OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 Ubuntu Linux; protocol 2.0\nCPE: cpe:2.3:a:openbsd:openssh:8.2:p1:*:*:*:*:*:*\nVersion-based match: vendors sometimes back-port fixes without changing the version, so confirm against vendor advisories.",
+          "cvss": 7,
+          "cvssVector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H",
+          "cves": [
+            "CVE-2021-41617"
+          ],
+          "kev": false,
+          "references": [
+            "https://nvd.nist.gov/vuln/detail/CVE-2021-41617"
+          ],
+          "remediation": [
+            "Update OpenSSH to a version that fixes CVE-2021-41617 (see the vendor advisory in the references).",
+            "If the vendor back-ported the fix, mark this finding as a false positive with a note."
+          ],
+          "fixAction": "Update OpenSSH on 192.168.1.20",
+          "status": "Open"
+        },
+        {
+          "key": "cve.version-match|192.168.1.20|22|CVE-2023-48795",
+          "checkId": "cve.version-match",
+          "title": "CVE-2023-48795 in OpenSSH 8.2p1",
+          "severity": "Medium",
+          "confidence": "Potential",
+          "host": "192.168.1.20",
+          "port": 22,
+          "protocol": "Tcp",
+          "description": "The SSH transport protocol with certain OpenSSH extensions allows a man-in-the-middle to bypass integrity checks (Terrapin attack).",
+          "evidence": "Detected: ssh (OpenSSH 8.2p1)\nBanner: OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 Ubuntu Linux; protocol 2.0\nCPE: cpe:2.3:a:openbsd:openssh:8.2:p1:*:*:*:*:*:*\nVersion-based match: vendors sometimes back-port fixes without changing the version, so confirm against vendor advisories.",
+          "cvss": 5.9,
+          "cvssVector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N",
+          "cves": [
+            "CVE-2023-48795"
+          ],
+          "kev": false,
+          "references": [
+            "https://nvd.nist.gov/vuln/detail/CVE-2023-48795"
+          ],
+          "remediation": [
+            "Update OpenSSH to a version that fixes CVE-2023-48795 (see the vendor advisory in the references).",
+            "If the vendor back-ported the fix, mark this finding as a false positive with a note."
+          ],
+          "fixAction": "Update OpenSSH on 192.168.1.20",
+          "status": "Open"
+        },
+        {
+          "key": "cve.version-match|192.168.1.20|443|CVE-2021-23017",
+          "checkId": "cve.version-match",
+          "title": "CVE-2021-23017 in nginx 1.18.0",
+          "severity": "High",
+          "confidence": "Potential",
+          "host": "192.168.1.20",
+          "port": 443,
+          "protocol": "Tcp",
+          "description": "A security issue in nginx resolver was identified, which might allow an attacker who is able to forge UDP packets from the DNS server to cause 1-byte memory overwrite.",
+          "evidence": "Detected: http (nginx 1.18.0)\nBanner: nginx 1.18.0\nCPE: cpe:2.3:a:f5:nginx:1.18.0:*:*:*:*:*:*:*\nVersion-based match: vendors sometimes back-port fixes without changing the version, so confirm against vendor advisories.",
+          "cvss": 7.7,
+          "cvssVector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:L/A:H",
+          "cves": [
+            "CVE-2021-23017"
+          ],
+          "kev": false,
+          "references": [
+            "https://nvd.nist.gov/vuln/detail/CVE-2021-23017"
+          ],
+          "remediation": [
+            "Update nginx to a version that fixes CVE-2021-23017 (see the vendor advisory in the references).",
+            "If the vendor back-ported the fix, mark this finding as a false positive with a note."
+          ],
+          "fixAction": "Update nginx on 192.168.1.20",
+          "status": "Open"
+        },
+        {
+          "key": "tls.legacy-protocol|192.168.1.20|443|tls1x",
+          "checkId": "tls.legacy-protocol",
+          "title": "TLS 1.0 enabled",
+          "severity": "Medium",
+          "confidence": "Confirmed",
+          "host": "192.168.1.20",
+          "port": 443,
+          "protocol": "Tcp",
+          "description": "TLS 1.0 and 1.1 were formally retired in 2021 (RFC 8996). They rely on weak hashing and are no longer accepted by modern browsers.",
+          "evidence": "Server accepted ClientHello for: TLS 1.0. Supported overall: TLS 1.0, TLS 1.2.",
+          "cvss": 5.3,
+          "cves": [],
+          "kev": false,
+          "references": [
+            "https://www.rfc-editor.org/rfc/rfc8996"
+          ],
+          "remediation": [
+            "Allow only TLS 1.2 and TLS 1.3.",
+            "Windows/IIS/RDP: disable old protocols and ciphers under HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCHANNEL, or use IIS Crypto / a hardening GPO, then restart.",
+            "Apache: SSLProtocol -all \u002BTLSv1.2 \u002BTLSv1.3 and SSLCipherSuite with modern AEAD suites.",
+            "nginx: ssl_protocols TLSv1.2 TLSv1.3; ssl_ciphers with ECDHE\u002BAESGCM/CHACHA20 suites.",
+            "Appliances and printers: set the minimum TLS version in the device\u0027s web admin, and update its firmware if the option is missing.",
+            "Rescan to confirm."
+          ],
+          "fixAction": "Turn off old SSL/TLS versions",
+          "status": "Open"
+        },
+        {
+          "key": "tls.weak-cipher|192.168.1.20|443|-",
+          "checkId": "tls.weak-cipher",
+          "title": "Weak TLS cipher suites accepted (RC4/3DES/DES)",
+          "severity": "Medium",
+          "confidence": "Confirmed",
+          "host": "192.168.1.20",
+          "port": 443,
+          "protocol": "Tcp",
+          "description": "The server accepts outdated ciphers. RC4 has known biases and 3DES is vulnerable to the SWEET32 birthday attack.",
+          "evidence": "Accepted: TLS_RSA_WITH_3DES_EDE_CBC_SHA (TLS 1.0)",
+          "cvss": 5.9,
+          "cves": [
+            "CVE-2016-2183"
+          ],
+          "kev": false,
+          "references": [
+            "https://ssl-config.mozilla.org/"
+          ],
+          "remediation": [
+            "Allow only AEAD suites with forward secrecy (ECDHE with AES-GCM or ChaCha20-Poly1305).",
+            "Windows/IIS/RDP: disable old protocols and ciphers under HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCHANNEL, or use IIS Crypto / a hardening GPO, then restart.",
+            "Apache: SSLProtocol -all \u002BTLSv1.2 \u002BTLSv1.3 and SSLCipherSuite with modern AEAD suites.",
+            "nginx: ssl_protocols TLSv1.2 TLSv1.3; ssl_ciphers with ECDHE\u002BAESGCM/CHACHA20 suites.",
+            "Appliances and printers: set the minimum TLS version in the device\u0027s web admin, and update its firmware if the option is missing."
+          ],
+          "fixAction": "Remove weak TLS ciphers",
+          "status": "Open"
+        }
+      ]
+    },
+    {
+      "address": "192.168.1.30",
+      "isUp": false,
+      "discoveryMethod": "Nmap: no-response",
+      "ports": [],
+      "findings": []
+    }
+  ],
+  "errors": [],
+  "warnings": [
+    "Nmap command: nmap -sV -O -oX sample-nmap.xml 192.168.1.0/24"
+  ]
+}
