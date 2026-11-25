@@ -24,8 +24,9 @@ public static class OsFingerprinter
             else Vote("Network device", 20, $"TTL {ttl} (>128)");
         }
 
-        var open = host.OpenPorts.ToDictionary(p => p.Port);
-        bool Has(int p) => open.ContainsKey(p);
+        // TCP ports only: the same number can also be open on UDP (e.g. 1900 for UPnP).
+        var open = host.OpenPorts.Where(p => p.Protocol == TransportProtocol.Tcp).Select(p => p.Port).ToHashSet();
+        bool Has(int p) => open.Contains(p);
 
         if (Has(135) && Has(445)) Vote("Windows", 30, "MSRPC + SMB ports");
         if (Has(3389)) Vote("Windows", 20, "Remote Desktop");

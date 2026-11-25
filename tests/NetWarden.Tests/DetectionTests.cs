@@ -102,6 +102,15 @@ public class DetectionTests
     }
 
     [Fact]
+    public void Os_guess_handles_same_port_on_tcp_and_udp()
+    {
+        var host = new HostResult { Address = "10.0.0.7", IsUp = true, Ttl = 64 };
+        host.Ports.Add(new PortResult { Port = 1900, Protocol = TransportProtocol.Tcp, State = PortState.Open, Service = new ServiceInfo() });
+        host.Ports.Add(new PortResult { Port = 1900, Protocol = TransportProtocol.Udp, State = PortState.Open, Service = new ServiceInfo { Name = "ssdp" } });
+        Assert.Equal("Linux/Unix", OsFingerprinter.Guess(host).Family);
+    }
+
+    [Fact]
     public async Task Offline_analysis_runs_fact_based_checks_only()
     {
         var scan = new ScanResult { State = ScanState.Imported };

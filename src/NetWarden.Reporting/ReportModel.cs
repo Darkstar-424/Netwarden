@@ -86,8 +86,8 @@ public sealed record ScanDiff(
     /// <summary>Compares an older scan (before) with a newer one (after).</summary>
     public static ScanDiff Compare(ScanResult before, ScanResult after)
     {
-        var b = before.LiveHosts.ToDictionary(h => h.Address);
-        var a = after.LiveHosts.ToDictionary(h => h.Address);
+        var b = before.LiveHosts.GroupBy(h => h.Address).ToDictionary(g => g.Key, g => g.First());
+        var a = after.LiveHosts.GroupBy(h => h.Address).ToDictionary(g => g.Key, g => g.First());
         var newHosts = a.Values.Where(h => !b.ContainsKey(h.Address)).ToList();
         var goneHosts = b.Values.Where(h => !a.ContainsKey(h.Address)).ToList();
         var newPorts = new List<(string, PortResult)>();

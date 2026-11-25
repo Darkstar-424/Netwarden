@@ -147,7 +147,17 @@ public sealed class ScanOrchestrator
             await Parallel.ForEachAsync(live, new ParallelOptions { MaxDegreeOfParallelism = timing.HostParallelism, CancellationToken = ct },
                 async (host, token) =>
                 {
-                    await ScanHostAsync(host, profile, ports, scanner, detector, tls, udp, names, timeout, progress, observer, pause, token).ConfigureAwait(false);
+                    try
+                    {
+                        await ScanHostAsync(host, profile, ports, scanner, detector, tls, udp, names, timeout, progress, observer, pause, token).ConfigureAwait(false);
+                    }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        // One misbehaving device must not stop the whole scan.
+                        _log.Error($"Scanning {host.Address} failed", ex);
+                        lock (result) result.Warnings.Add($"{host.Address}: scan of this device stopped early ({ex.Message}). Other devices were scanned normally.");
+                        observer.OnMessage($"Problem scanning {host.Address}: {ex.Message}");
+                    }
                 }).ConfigureAwait(false);
 
             result.State = ScanState.Completed;

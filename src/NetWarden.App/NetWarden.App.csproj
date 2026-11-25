@@ -22,6 +22,7 @@
     <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
   <ItemGroup>
+    <!-- WPF projects leave System.IO out of the implicit usings (it clashes with System.Windows.Shapes.Path). -->
     <Using Include="System.IO" />
   </ItemGroup>
   <ItemGroup>
