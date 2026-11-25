@@ -1,0 +1,95 @@
+<UserControl x:Class="NetWarden.App.Views.NetworkMapView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel Margin="28,24,28,24">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,14">
+            <TextBlock Style="{StaticResource H1}" Text="Network map" />
+            <TextBlock Style="{StaticResource Secondary}" Text="Devices grouped by subnet (/24). Colour shows each device's most serious open issue. Click a device for details." />
+            <TextBlock Style="{StaticResource Secondary}" Text="Run a scan to draw the map." Margin="0,12,0,0"
+                       Visibility="{Binding Workspace.HasCurrentScan, Converter={StaticResource CollapsedIf}}" />
+        </StackPanel>
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Subnets}" Style="{StaticResource PlainList}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Margin="0,0,16,16" Padding="12">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Name}" Style="{StaticResource H3}" />
+                                <TextBlock Text="{Binding Summary}" Style="{StaticResource Caption}" />
+                                <Grid Width="{Binding Width}" Height="{Binding Height}">
+                                    <!-- spokes -->
+                                    <ItemsControl ItemsSource="{Binding Edges}" Focusable="False">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><Canvas /></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Line X1="{Binding X1}" Y1="{Binding Y1}" X2="{Binding X2}" Y2="{Binding Y2}" Stroke="{DynamicResource Brush.MapLine}" StrokeThickness="1.2" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <!-- subnet hub -->
+                                    <Canvas>
+                                        <Border Canvas.Left="{Binding HubX}" Canvas.Top="{Binding HubY}" Width="120" Height="40" CornerRadius="20"
+                                                Background="{DynamicResource Brush.MapHub}">
+                                            <TextBlock Text="{Binding Name}" Foreground="{DynamicResource Brush.AccentText}" FontWeight="SemiBold" FontSize="12"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                    </Canvas>
+                                    <!-- devices -->
+                                    <ItemsControl ItemsSource="{Binding Nodes}" Focusable="False">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><Canvas /></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemContainerStyle>
+                                            <Style TargetType="ContentPresenter">
+                                                <Setter Property="Canvas.Left" Value="{Binding X}" />
+                                                <Setter Property="Canvas.Top" Value="{Binding Y}" />
+                                            </Style>
+                                        </ItemsControl.ItemContainerStyle>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Width="96" Height="44" Padding="4,0" ToolTip="{Binding Tooltip}"
+                                                        Command="{Binding DataContext.OpenHostCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Worst}" Value="Critical">
+                                                                    <Setter Property="Background" Value="{DynamicResource Brush.Sev.Critical.Bg}" />
+                                                                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Sev.Critical.Solid}" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Worst}" Value="High">
+                                                                    <Setter Property="Background" Value="{DynamicResource Brush.Sev.High.Bg}" />
+                                                                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Sev.High.Solid}" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Worst}" Value="Medium">
+                                                                    <Setter Property="Background" Value="{DynamicResource Brush.Sev.Medium.Bg}" />
+                                                                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Sev.Medium.Solid}" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Worst}" Value="Low">
+                                                                    <Setter Property="Background" Value="{DynamicResource Brush.Sev.Low.Bg}" />
+                                                                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Sev.Low.Solid}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Label}" FontSize="11.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center" MaxWidth="86" />
+                                                        <TextBlock Text="{Binding Host.Address}" FontSize="10.5" HorizontalAlignment="Center" Opacity="0.8" />
+                                                    </StackPanel>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

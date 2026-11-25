@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- View models, services and the CLI. No WPF types here, so it can be unit-tested anywhere. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>NetWarden.UI</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NetWarden.Core\NetWarden.Core.csproj" />
+    <ProjectReference Include="..\NetWarden.Checks\NetWarden.Checks.csproj" />
+    <ProjectReference Include="..\NetWarden.Data\NetWarden.Data.csproj" />
+    <ProjectReference Include="..\NetWarden.Reporting\NetWarden.Reporting.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="NetWarden.Tests" />
+  </ItemGroup>
+</Project>

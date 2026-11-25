@@ -1,0 +1,83 @@
+<UserControl x:Class="NetWarden.App.Views.CompareView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel Margin="28,24,28,24">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,14">
+            <TextBlock Style="{StaticResource H1}" Text="Compare scans" />
+            <TextBlock Style="{StaticResource Secondary}" Text="See what changed between two scans: new devices, newly opened ports, and new or resolved findings." />
+            <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                <TextBlock Text="Before" Style="{StaticResource Secondary}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <ComboBox Width="360" ItemsSource="{Binding Workspace.Scans}" SelectedItem="{Binding Before}" DisplayMemberPath="Label" />
+                <TextBlock Text="After" Style="{StaticResource Secondary}" VerticalAlignment="Center" Margin="16,0,8,0" />
+                <ComboBox Width="360" ItemsSource="{Binding Workspace.Scans}" SelectedItem="{Binding After}" DisplayMemberPath="Label" />
+                <Button Style="{StaticResource PrimaryButton}" Content="Compare" Command="{Binding CompareCommand}" Margin="12,0,0,0" MinWidth="100" />
+            </StackPanel>
+            <TextBlock Text="{Binding Summary}" Margin="0,12,0,0" FontWeight="SemiBold" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <Grid Visibility="{Binding HasResult, Converter={StaticResource BoolToVisibility}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="1.4*" />
+            </Grid.RowDefinitions>
+
+            <Border Style="{StaticResource Card}" Margin="0,0,6,10">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource H3}" Text="New devices" Margin="0,0,0,6" />
+                    <ListBox ItemsSource="{Binding NewHosts}" BorderThickness="0" Background="Transparent" Foreground="{DynamicResource Brush.Text}" FontFamily="{StaticResource Font.Mono}" FontSize="12.5" />
+                </DockPanel>
+            </Border>
+            <Border Grid.Column="1" Style="{StaticResource Card}" Margin="6,0,0,10">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource H3}" Text="Devices no longer answering" Margin="0,0,0,6" />
+                    <ListBox ItemsSource="{Binding GoneHosts}" BorderThickness="0" Background="Transparent" Foreground="{DynamicResource Brush.Text}" FontFamily="{StaticResource Font.Mono}" FontSize="12.5" />
+                </DockPanel>
+            </Border>
+            <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,6,10">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource H3}" Text="Newly opened ports" Margin="0,0,0,6" />
+                    <ListBox ItemsSource="{Binding NewPorts}" BorderThickness="0" Background="Transparent" Foreground="{DynamicResource Brush.Text}" FontFamily="{StaticResource Font.Mono}" FontSize="12.5" />
+                </DockPanel>
+            </Border>
+            <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}" Margin="6,0,0,10">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource H3}" Text="Closed ports" Margin="0,0,0,6" />
+                    <ListBox ItemsSource="{Binding ClosedPorts}" BorderThickness="0" Background="Transparent" Foreground="{DynamicResource Brush.Text}" FontFamily="{StaticResource Font.Mono}" FontSize="12.5" />
+                </DockPanel>
+            </Border>
+            <DockPanel Grid.Row="2" Margin="0,0,6,0">
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource H3}" Text="New findings" Margin="0,0,0,6" />
+                <DataGrid ItemsSource="{Binding NewFindings}">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="Severity" Width="110" SortMemberPath="SeverityRank">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate><Border Style="{StaticResource SevBadge}"><TextBlock Text="{Binding SeverityText}" /></Border></DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Finding" Binding="{Binding Title}" Width="2*" />
+                        <DataGridTextColumn Header="Where" Binding="{Binding Location}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+            <DockPanel Grid.Row="2" Grid.Column="1" Margin="6,0,0,0">
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource H3}" Text="Resolved findings" Margin="0,0,0,6" />
+                <DataGrid ItemsSource="{Binding ResolvedFindings}">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="Severity" Width="110" SortMemberPath="SeverityRank">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate><Border Style="{StaticResource SevBadge}"><TextBlock Text="{Binding SeverityText}" /></Border></DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Finding" Binding="{Binding Title}" Width="2*" />
+                        <DataGridTextColumn Header="Where" Binding="{Binding Location}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</UserControl>

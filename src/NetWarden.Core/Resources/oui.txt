@@ -1,0 +1,79 @@
+# Built-in MAC vendor prefixes (OUI<TAB>Vendor). For full coverage place the IEEE oui.csv in the NetWarden data folder.
+000569	VMware
+000C29	VMware
+001C14	VMware
+005056	VMware
+080027	Oracle VirtualBox
+0A0027	Oracle VirtualBox
+525400	QEMU/KVM virtual NIC
+00155D	Microsoft Hyper-V
+001C42	Parallels
+00163E	Xen virtual NIC
+B827EB	Raspberry Pi Foundation
+DCA632	Raspberry Pi Trading
+E45F01	Raspberry Pi Trading
+D83ADD	Raspberry Pi Trading
+2CCF67	Raspberry Pi Trading
+001132	Synology
+0011D8	ASUSTek
+00089B	QNAP
+245EBE	QNAP
+001788	Philips Lighting (Hue)
+000D93	Apple
+0050E4	Apple
+F0B479	Apple
+3C0754	Apple
+00037F	Atheros
+000B86	Aruba Networks
+00000C	Cisco
+000142	Cisco
+001B54	Cisco
+0018B9	Cisco
+00E0FC	Huawei
+0004F2	Polycom
+00095B	Netgear
+00146C	Netgear
+001E2A	Netgear
+00180A	Cisco Meraki
+0024A5	Buffalo
+00D0B7	Intel
+001B21	Intel
+3417EB	Dell
+00065B	Dell
+001372	Dell
+0014C2	Hewlett-Packard
+001A4B	Hewlett-Packard
+002481	Hewlett-Packard
+3C4A92	Hewlett-Packard
+000E7F	Hewlett-Packard
+001B78	Hewlett-Packard
+0000AA	Xerox
+000085	Canon
+0000F0	Samsung
+001A11	Google
+F4F5D8	Google
+3C5AB4	Google
+000AF7	Broadcom
+001018	Broadcom
+000FB5	Netgear
+0014BF	Linksys
+001310	Linksys
+C0C1C0	Cisco-Linksys
+000E08	Cisco-Linksys
+0018F8	Cisco-Linksys
+002722	Ubiquiti Networks
+0418D6	Ubiquiti Networks
+24A43C	Ubiquiti Networks
+4C5E0C	MikroTik
+D4CA6D	MikroTik
+000C42	MikroTik
+0090E8	Moxa
+00A0F8	Zebra Technologies
+000B82	Grandstream Networks
+00907F	WatchGuard
+00090F	Fortinet
+000DB9	PC Engines
+B8AC6F	Dell
+00E04C	Realtek
+008077	Brother Industries
+001BA9	Brother Industries

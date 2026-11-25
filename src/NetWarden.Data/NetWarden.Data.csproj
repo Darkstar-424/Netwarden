@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>NetWarden.Data</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NetWarden.Core\NetWarden.Core.csproj" />
+  </ItemGroup>
+  <!-- NwOffline=true is only used to compile-check without NuGet access; real builds always include SQLite. -->
+  <ItemGroup Condition="'$(NwOffline)' != 'true'">
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(NwOffline)' == 'true'">
+    <Compile Remove="Sqlite\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="NetWarden.Tests" />
+  </ItemGroup>
+</Project>

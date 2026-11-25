@@ -1,0 +1,190 @@
+{
+  // NetWarden built-in web check pack. Every template is a single read-only request (GET/HEAD/OPTIONS).
+  "name": "Built-in web checks",
+  "version": "1.0.0",
+  "templates": [
+    {
+      "id": "git-exposed",
+      "name": "Git repository exposed on web server",
+      "severity": "High",
+      "method": "GET",
+      "path": "/.git/HEAD",
+      "status": [200],
+      "bodyMatches": ["^ref:\\s*refs/"],
+      "description": "The web server serves the site's .git folder. Attackers can download the full source code history, often including passwords and API keys.",
+      "evidenceNote": "/.git/HEAD returned a Git ref.",
+      "fixAction": "Block access to the .git folder",
+      "remediation": [
+        "Remove the .git folder from the web root, or deploy without it.",
+        "IIS: add a Request Filtering hidden segment for '.git'. Apache: RedirectMatch 404 /\\.git. nginx: location ~ /\\.git { deny all; }",
+        "Rotate any secrets that were ever committed to the repository."
+      ],
+      "references": ["https://owasp.org/www-project-web-security-testing-guide/"]
+    },
+    {
+      "id": "env-file-exposed",
+      "name": "Environment (.env) file exposed",
+      "severity": "High",
+      "method": "GET",
+      "path": "/.env",
+      "status": [200],
+      "bodyMatches": ["^[A-Z][A-Z0-9_]{2,}\\s*="],
+      "bodyNotMatches": ["<html", "<!doctype"],
+      "description": "A .env configuration file is downloadable. These files usually hold database passwords, API keys and other secrets.",
+      "evidenceNote": "/.env returned KEY=value lines (values were not stored).",
+      "fixAction": "Remove the .env file from the web root",
+      "remediation": [
+        "Move .env outside the web root or block dot-files in the web server configuration.",
+        "Treat every secret in the file as compromised and rotate it."
+      ]
+    },
+    {
+      "id": "apache-server-status",
+      "name": "Apache server-status page exposed",
+      "severity": "Medium",
+      "method": "GET",
+      "path": "/server-status",
+      "status": [200],
+      "bodyMatches": ["Apache Server Status"],
+      "description": "mod_status shows live requests, client IP addresses and internal URLs to anyone who can reach it.",
+      "fixAction": "Restrict /server-status to admins",
+      "remediation": ["In the <Location /server-status> block use 'Require ip 127.0.0.1' (or your admin network), or disable mod_status."]
+    },
+    {
+      "id": "apache-server-info",
+      "name": "Apache server-info page exposed",
+      "severity": "Medium",
+      "method": "GET",
+      "path": "/server-info",
+      "status": [200],
+      "bodyMatches": ["Apache Server Information"],
+      "description": "mod_info shows the full web server configuration, including modules and file paths.",
+      "fixAction": "Restrict /server-info to admins",
+      "remediation": ["Restrict <Location /server-info> to admin addresses or disable mod_info."]
+    },
+    {
+      "id": "phpinfo",
+      "name": "phpinfo() page exposed",
+      "severity": "Medium",
+      "method": "GET",
+      "path": "/phpinfo.php",
+      "status": [200],
+      "bodyMatches": ["(<title>PHP \\d|phpinfo\\(\\))"],
+      "description": "A phpinfo() page shows the PHP version, loaded modules, file paths and environment variables, which helps attackers plan an attack.",
+      "fixAction": "Delete phpinfo.php",
+      "remediation": ["Delete the phpinfo.php file (and any similar test files) from the web server."]
+    },
+    {
+      "id": "directory-listing",
+      "name": "Directory listing enabled",
+      "severity": "Medium",
+      "method": "GET",
+      "path": "/",
+      "status": [200],
+      "bodyMatches": ["<title>\\s*(Index of /|Directory listing for /)"],
+      "description": "The web server lists the files in a folder when there is no index page, which can expose backups, logs and configuration files.",
+      "fixAction": "Turn off directory listing",
+      "remediation": ["IIS: Directory Browsing › Disable. Apache: Options -Indexes. nginx: autoindex off;"]
+    },
+    {
+      "id": "tomcat-manager",
+      "name": "Tomcat Manager reachable",
+      "severity": "Medium",
+      "method": "GET",
+      "path": "/manager/html",
+      "status": [401, 403],
+      "headerMatches": ["WWW-Authenticate: Tomcat Manager"],
+      "description": "The Tomcat Manager admin application is reachable. If it uses a weak or default password, attackers can deploy code to the server. (NetWarden did not try any passwords.)",
+      "fixAction": "Restrict Tomcat Manager to admins",
+      "remediation": [
+        "Limit the Manager app to localhost with the RemoteAddrValve in manager/META-INF/context.xml, or remove it.",
+        "Make sure tomcat-users.xml has no default or weak passwords."
+      ]
+    },
+    {
+      "id": "phpmyadmin",
+      "name": "phpMyAdmin login page reachable",
+      "severity": "Low",
+      "method": "GET",
+      "path": "/phpmyadmin/",
+      "status": [200],
+      "bodyMatches": ["phpMyAdmin"],
+      "description": "The phpMyAdmin database admin tool is reachable. It is a frequent target for password guessing and has a long history of vulnerabilities.",
+      "fixAction": "Restrict phpMyAdmin to admins",
+      "remediation": ["Allow phpMyAdmin only from admin addresses or a VPN, keep it updated, or remove it if unused."]
+    },
+    {
+      "id": "spring-actuator-env",
+      "name": "Spring Boot Actuator /env exposed",
+      "severity": "High",
+      "method": "GET",
+      "path": "/actuator/env",
+      "status": [200],
+      "bodyMatches": ["\"propertySources\""],
+      "description": "The Actuator environment endpoint is public. It can reveal configuration values and credentials, and some Actuator endpoints allow remote changes.",
+      "evidenceNote": "/actuator/env returned a JSON property list (values were not stored).",
+      "fixAction": "Secure Spring Boot Actuator endpoints",
+      "remediation": ["Set management.endpoints.web.exposure.include=health,info and protect Actuator endpoints with Spring Security."]
+    },
+    {
+      "id": "trace-method",
+      "name": "HTTP TRACE method advertised",
+      "severity": "Low",
+      "method": "OPTIONS",
+      "path": "/",
+      "headerMatches": ["Allow: \\bTRACE\\b"],
+      "description": "The server lists TRACE as an allowed method. TRACE can help attackers read cookies in some cross-site scripting scenarios (Cross-Site Tracing).",
+      "evidenceNote": "The Allow header of an OPTIONS request lists TRACE. NetWarden did not send a TRACE request.",
+      "fixAction": "Disable the TRACE method",
+      "remediation": ["Apache: TraceEnable off. IIS: Request Filtering › HTTP Verbs › deny TRACE. nginx does not support TRACE by default."]
+    },
+    {
+      "id": "elasticsearch-noauth",
+      "name": "Elasticsearch without authentication",
+      "severity": "High",
+      "method": "GET",
+      "path": "/",
+      "ports": [9200],
+      "status": [200],
+      "bodyMatches": ["\"cluster_name\"", "\"tagline\""],
+      "description": "The Elasticsearch REST API answers without a password, so anyone who can reach it can probably read or delete the indexed data.",
+      "evidenceNote": "GET / returned cluster information without authentication. No indices were read.",
+      "fixAction": "Enable Elasticsearch security",
+      "remediation": [
+        "Enable security (xpack.security.enabled: true) with passwords/TLS (default since Elasticsearch 8).",
+        "Firewall TCP 9200/9300 to application servers only."
+      ],
+      "cvss": 8.2
+    },
+    {
+      "id": "docker-api-noauth",
+      "name": "Docker Engine API exposed without TLS",
+      "severity": "Critical",
+      "method": "GET",
+      "path": "/version",
+      "ports": [2375],
+      "status": [200],
+      "bodyMatches": ["\"ApiVersion\""],
+      "description": "The Docker daemon's API is reachable without authentication. Anyone who can reach it can start containers with full root access to the host.",
+      "evidenceNote": "GET /version answered without authentication. No other API calls were made.",
+      "fixAction": "Close the unauthenticated Docker API",
+      "remediation": [
+        "Remove '-H tcp://0.0.0.0:2375' from the Docker daemon settings; use the local socket or SSH.",
+        "If remote access is required, use TLS client certificates on port 2376."
+      ],
+      "cvss": 9.8
+    },
+    {
+      "id": "default-web-page",
+      "name": "Default web server page",
+      "severity": "Info",
+      "method": "GET",
+      "path": "/",
+      "status": [200],
+      "bodyMatches": ["<title>\\s*(IIS Windows Server|IIS\\d* Welcome|Apache2 \\w+ Default Page|Welcome to nginx!|Test Page for the (Apache|Nginx))"],
+      "description": "The server shows its out-of-the-box start page. Often a sign of a forgotten or unconfigured server worth reviewing or switching off.",
+      "fixAction": "Review or remove unused web servers",
+      "remediation": ["If the web server isn't needed, stop and disable it. Otherwise replace the default site."]
+    }
+  ]
+}
