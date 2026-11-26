@@ -76,6 +76,16 @@ public sealed class PortRow
     public string Facts => Model.Service == null ? "" : string.Join("\n", Model.Service.Facts.Where(kv => !kv.Key.StartsWith("http.header", StringComparison.Ordinal) && !kv.Key.StartsWith("ssh.", StringComparison.Ordinal) || kv.Key == "ssh.banner").Select(kv => $"{kv.Key}: {kv.Value}"));
 }
 
+public sealed class AppRow
+{
+    public AppInfo Model { get; }
+    public AppRow(AppInfo a) => Model = a;
+    public string Name => Model.Display;
+    public string Category => Model.Category;
+    public string Where => Model.Where;
+    public string Detail => string.Join(" · ", new[] { Model.Detail, "found by " + Model.Source }.Where(s => !string.IsNullOrEmpty(s)));
+}
+
 public sealed class HostRow : ObservableObject
 {
     public HostResult Model { get; private set; }
@@ -84,7 +94,7 @@ public sealed class HostRow : ObservableObject
     public void Refresh(HostResult h)
     {
         Model = h;
-        Raise(nameof(Name), nameof(Os), nameof(OpenPorts), nameof(OpenPortCount), nameof(FindingCount), nameof(WorstSeverity), nameof(WorstSeverityText), nameof(Severity), nameof(Mac), nameof(Vendor), nameof(Services));
+        Raise(nameof(Name), nameof(Os), nameof(OpenPorts), nameof(OpenPortCount), nameof(FindingCount), nameof(WorstSeverity), nameof(WorstSeverityText), nameof(Severity), nameof(Mac), nameof(Vendor), nameof(Services), nameof(Device), nameof(DeviceDetail), nameof(Apps), nameof(AppSummary), nameof(HasApps));
     }
 
     public string Address => Model.Address;
@@ -93,6 +103,12 @@ public sealed class HostRow : ObservableObject
     public string OsDetail => Model.Os == null ? "" : $"{Model.Os.Display} – {Model.Os.Confidence}% confident ({Model.Os.Basis})";
     public string Mac => Model.MacAddress ?? "";
     public string Vendor => Model.Vendor ?? "";
+    /// <summary>Short "what is this" label for the device list: model, else type, else vendor.</summary>
+    public string Device => Model.DeviceModel ?? Model.DeviceType ?? Model.Vendor ?? "";
+    public string DeviceDetail => string.Join(" · ", new[] { Model.DeviceType, Model.DeviceModel, Model.FriendlyName is { } f ? $"\"{f}\"" : null }.Where(s => !string.IsNullOrEmpty(s)));
+    public IReadOnlyList<AppRow> Apps => Model.Apps.Select(a => new AppRow(a)).ToList();
+    public bool HasApps => Model.Apps.Count > 0;
+    public string AppSummary => string.Join(", ", Model.Apps.Where(a => a.Category is not ("Network service" or "Web server" or "Windows services" or "Device info")).Select(a => a.Name).Take(6));
     public string Discovery => Model.DiscoveryMethod;
     public string Latency => Model.LatencyMs is double l ? $"{l:0} ms" : "";
     public int OpenPortCount => Model.OpenPorts.Count();

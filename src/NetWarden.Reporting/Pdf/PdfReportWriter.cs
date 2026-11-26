@@ -205,9 +205,10 @@ public static class PdfReportWriter
                         foreach (var host in scan.LiveHosts)
                         {
                             table.Cell().BorderTop(1).BorderColor(Line).Padding(5).Text(host.Address).FontFamily("Consolas").FontSize(9);
-                            table.Cell().BorderTop(1).BorderColor(Line).Padding(5).Text((host.NetBiosName ?? host.HostName ?? "") + (host.Vendor != null ? "\n" + host.Vendor : ""));
+                            table.Cell().BorderTop(1).BorderColor(Line).Padding(5).Text(string.Join("\n", new[] { host.NetBiosName ?? host.HostName, host.DeviceModel ?? host.Vendor, host.DeviceType }.Where(x => !string.IsNullOrEmpty(x))));
                             table.Cell().BorderTop(1).BorderColor(Line).Padding(5).Text(host.Os?.Display ?? "");
-                            table.Cell().BorderTop(1).BorderColor(Line).Padding(5).Text(string.Join("\n", host.OpenPorts.Select(p => $"{p.Label}  {p.Service?.Display}"))).FontSize(9);
+                            table.Cell().BorderTop(1).BorderColor(Line).Padding(5).Text((host.Apps.Where(a => a.Category is not ("Network service" or "Web server" or "Windows services" or "Device info")).Select(a => a.Display).Take(8).ToList() is { Count: > 0 } named ? "Apps: " + string.Join(", ", named) + "\n" : "")
+                                + string.Join("\n", host.OpenPorts.Select(p => $"{p.Label}  {p.Service?.Display}"))).FontSize(9);
                             table.Cell().BorderTop(1).BorderColor(Line).Padding(5).Text(host.Findings.Count(x => x.Status == FindingStatus.Open).ToString(CultureInfo.InvariantCulture));
                         }
                     });

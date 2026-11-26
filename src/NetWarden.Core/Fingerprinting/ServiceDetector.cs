@@ -325,6 +325,48 @@ public sealed class ServiceDetector
             return;
         }
         ApplyHttp(resp, info);
+        // Many admin pages answer "/" with a redirect to their login page. Follow one redirect that stays on the
+        // same device and port, to read the real page's title.
+        if (info.Fact("app.name") == null && resp.StatusCode is >= 301 and <= 308 && SameOriginPath(resp.Header("Location"), host, port) is string path)
+        {
+            var next = await _probe.HttpRequestAsync(host, port, resp.Tls, "GET", path, _timeout + _timeout, ct).ConfigureAwait(false);
+            if (next != null)
+            {
+                if (BannerParser.Title(next.Body) is string t) info.Facts["http.title"] = t;
+                ApplyApps(next, info);
+            }
+        }
+    }
+
+    /// <summary>Returns the path of a redirect target only if it points back at the same host and port.</summary>
+    public static string? SameOriginPath(string? location, string host, int port)
+    {
+        if (string.IsNullOrWhiteSpace(location)) return null;
+        location = location.Trim();
+        if (location.StartsWith('/') && !location.StartsWith("//", StringComparison.Ordinal)) return location.Length > 512 ? null : location;
+        if (Uri.TryCreate(location, UriKind.Absolute, out var u) && (u.Scheme == Uri.UriSchemeHttp || u.Scheme == Uri.UriSchemeHttps)
+            && string.Equals(u.Host.Trim('[', ']'), host, StringComparison.OrdinalIgnoreCase) && u.Port == port)
+            return u.PathAndQuery;
+        return null;
+    }
+
+    /// <summary>Records the web application recognised in a response (first match wins) and its CPE for CVE matching.</summary>
+    public static void ApplyApps(HttpProbeResponse resp, ServiceInfo info)
+    {
+        var hits = WebAppSignatures.Match(resp);
+        if (hits.Count == 0) return;
+        var best = hits[0];
+        info.Facts["app.name"] = best.Name;
+        info.Facts["app.category"] = best.Category;
+        info.Facts["app.source"] = best.Source;
+        if (best.Version != null) info.Facts["app.version"] = best.Version;
+        if (best.DeviceHint != null) info.Facts["app.device"] = best.DeviceHint;
+        if (hits.Count > 1) info.Facts["app.also"] = string.Join(", ", hits.Skip(1).Select(h => h.Name).Distinct());
+        foreach (var h in hits.Where(h => h.CpeVendor != null && h.CpeProduct != null && h.Version != null))
+        {
+            var cpe = CpeMapper.Build(h.CpeVendor!, h.CpeProduct!, h.Version!);
+            if (!info.Cpes.Contains(cpe)) info.Cpes.Add(cpe);
+        }
     }
 
     public static void ApplyHttp(HttpProbeResponse resp, ServiceInfo info)
@@ -350,6 +392,7 @@ public sealed class ServiceDetector
             foreach (var cpe in CpeMapper.Map(c.Product, c.Version))
                 if (!info.Cpes.Contains(cpe)) info.Cpes.Add(cpe);
         }
+        ApplyApps(resp, info);
         if (resp.Body.Contains("\"cluster_name\"", StringComparison.Ordinal) && resp.Body.Contains("\"tagline\"", StringComparison.Ordinal))
         {
             info.Name = "elasticsearch";

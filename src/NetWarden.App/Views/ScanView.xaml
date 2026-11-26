@@ -92,6 +92,10 @@
                             <CheckBox Content="Service and version detection" IsChecked="{Binding ServiceDetection}" Margin="0,0,0,6" />
                             <CheckBox Content="TLS inspection (versions, ciphers, certificates)" IsChecked="{Binding TlsInspection}" Margin="0,0,0,6" />
                             <CheckBox Content="OS fingerprinting" IsChecked="{Binding OsDetection}" Margin="0,0,0,6" />
+                            <CheckBox IsChecked="{Binding IdentifyApps}" Margin="0,0,0,6"
+                                      ToolTip="Recognises web apps and admin pages, asks devices what they advertise over Bonjour, and reads their UPnP model description. Read-only; uses the same discovery your phone and printer dialogs use.">
+                                <TextBlock Text="Identify apps and device models (web apps, Bonjour, UPnP)" TextWrapping="Wrap" />
+                            </CheckBox>
 
                             <TextBlock Style="{StaticResource Label}" Text="VULNERABILITY ASSESSMENT" Margin="0,10,0,6" />
                             <CheckBox Content="Vulnerability checks" IsChecked="{Binding VulnerabilityChecks}" Margin="0,0,0,6" />

@@ -300,6 +300,21 @@ public sealed class ScanOrchestrator
             });
             await Task.WhenAll(tasks).ConfigureAwait(false);
         }
+        // What the device says about itself: Bonjour services, UPnP model, recognised web apps.
+        if (profile.IdentifyApps)
+        {
+            await pause.WaitWhilePausedAsync(ct).ConfigureAwait(false);
+            var identifier = new DeviceIdentifier(_probe, timeout, _log);
+            DeviceIdentifier.BonjourResult? bonjour = null;
+            UpnpDescription.Info? upnp = null;
+            if (profile.UdpProbes && ip.AddressFamily == AddressFamily.InterNetwork)
+            {
+                bonjour = await identifier.BonjourAsync(host.Address, ct).ConfigureAwait(false);
+                var location = host.Ports.FirstOrDefault(p => p.Protocol == TransportProtocol.Udp && p.Port == 1900)?.Service?.Fact("ssdp.location");
+                if (location != null) upnp = await identifier.UpnpAsync(host.Address, location, ct).ConfigureAwait(false);
+            }
+            AppInventory.Build(host, bonjour, upnp);
+        }
         if (profile.OsDetection) host.Os = OsFingerprinter.Guess(host);
         progress.Done(1, null);
         observer.OnHostUpdated(host);

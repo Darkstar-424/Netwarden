@@ -29,7 +29,8 @@
                     <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="125" />
                     <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
                     <DataGridTextColumn Header="OS guess" Binding="{Binding Os}" Width="*" />
-                    <DataGridTextColumn Header="Vendor" Binding="{Binding Vendor}" Width="*" />
+                    <DataGridTextColumn Header="Device" Binding="{Binding Device}" Width="*" />
+                    <DataGridTextColumn Header="Apps and services" Binding="{Binding AppSummary}" Width="1.4*" />
                     <DataGridTextColumn Header="Ports" Binding="{Binding OpenPortCount}" Width="60" />
                     <DataGridTemplateColumn Header="Worst issue" Width="120" SortMemberPath="WorstRank">
                         <DataGridTemplateColumn.CellTemplate>
@@ -63,6 +64,7 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                                     <TextBlock Style="{StaticResource Secondary}" Text="OS guess" />
@@ -80,10 +82,37 @@
                                 <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Discovery}" TextWrapping="Wrap" Margin="0,0,0,6" />
                                 <TextBlock Grid.Row="4" Style="{StaticResource Secondary}" Text="Response time" />
                                 <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Latency}" />
+                                <TextBlock Grid.Row="5" Style="{StaticResource Secondary}" Text="Device" Margin="0,6,0,0" />
+                                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding DeviceDetail}" TextWrapping="Wrap" Margin="0,6,0,0" />
                             </Grid>
 
+                            <StackPanel Visibility="{Binding HasApps, Converter={StaticResource BoolToVisibility}}">
+                                <StackPanel Orientation="Horizontal" Margin="0,18,0,8">
+                                    <TextBlock Style="{StaticResource H3}" Text="Apps and services" />
+                                    <ContentControl Style="{StaticResource HelpMark}"
+                                                    ToolTip="What NetWarden recognised on this device: web apps and admin pages, services it advertises over Bonjour, and its UPnP description. Identified without signing in." />
+                                </StackPanel>
+                                <ItemsControl ItemsSource="{Binding Apps}" Style="{StaticResource PlainList}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="0,6">
+                                                <StackPanel>
+                                                    <DockPanel>
+                                                        <TextBlock DockPanel.Dock="Right" Text="{Binding Where}" Style="{StaticResource Caption}" Margin="8,0,0,0" />
+                                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                    </DockPanel>
+                                                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap">
+                                                        <Run Text="{Binding Category, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Detail, Mode=OneWay}" />
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
                             <StackPanel Orientation="Horizontal" Margin="0,18,0,8">
-                                <TextBlock Style="{StaticResource H3}" Text="Services" />
+                                <TextBlock Style="{StaticResource H3}" Text="Open ports" />
                                 <ContentControl Style="{StaticResource HelpMark}" ToolTip="{Binding [port], Source={x:Static svc:Glossary.Instance}}" />
                             </StackPanel>
                             <ItemsControl ItemsSource="{Binding Ports}" Style="{StaticResource PlainList}">

@@ -116,6 +116,7 @@ public static class NmapXmlImporter
                     Basis = "Nmap OS detection"
                 };
             }
+            NetWarden.Core.Scanning.AppInventory.Build(host, null, null);
             result.Hosts.Add(host);
         }
         return result;

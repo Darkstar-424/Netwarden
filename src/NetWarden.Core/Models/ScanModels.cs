@@ -69,6 +69,23 @@ public sealed class PortResult
     public string Label => $"{Port}/{(Protocol == TransportProtocol.Tcp ? "tcp" : "udp")}";
 }
 
+/// <summary>One application or service identified on a device.</summary>
+public sealed class AppInfo
+{
+    public string Name { get; set; } = "";
+    /// <summary>Plain-English group, e.g. "Web app", "File sharing", "Media", "Remote access".</summary>
+    public string Category { get; set; } = "";
+    public string? Version { get; set; }
+    /// <summary>Where it was seen, e.g. "443/tcp", "Bonjour", "UPnP".</summary>
+    public string Where { get; set; } = "";
+    /// <summary>How it was identified, e.g. "page title", "service banner", "Bonjour advertisement".</summary>
+    public string Source { get; set; } = "";
+    public string? Detail { get; set; }
+
+    [JsonIgnore]
+    public string Display => string.IsNullOrEmpty(Version) ? Name : $"{Name} {Version}";
+}
+
 public sealed class OsGuess
 {
     public string Family { get; set; } = "Unknown";
@@ -94,6 +111,14 @@ public sealed class HostResult
     public string DiscoveryMethod { get; set; } = "";
     public List<PortResult> Ports { get; set; } = new();
     public OsGuess? Os { get; set; }
+    /// <summary>Make and model the device reports about itself (UPnP / Bonjour), e.g. "Synology DS920+".</summary>
+    public string? DeviceModel { get; set; }
+    /// <summary>Kind of device inferred from what it advertises, e.g. "Printer", "NAS", "Media player".</summary>
+    public string? DeviceType { get; set; }
+    /// <summary>Name the device gives itself on the network (UPnP friendly name or Bonjour name).</summary>
+    public string? FriendlyName { get; set; }
+    /// <summary>Applications and services identified on the device, in plain words.</summary>
+    public List<AppInfo> Apps { get; set; } = new();
     public List<Finding> Findings { get; set; } = new();
 
     [JsonIgnore]

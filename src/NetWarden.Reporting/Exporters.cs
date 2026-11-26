@@ -113,7 +113,10 @@ public static class HtmlReportWriter
         foreach (var h in s.LiveHosts)
         {
             sb.Append("<tr><td class=\"mono\">").Append(E(h.Address)).Append("</td><td>").Append(E(h.NetBiosName ?? h.HostName ?? "")).Append("</td><td>")
-              .Append(E(h.Os?.Display ?? "")).Append("</td><td class=\"mono\">").Append(E(h.MacAddress ?? "")).Append(h.Vendor != null ? "<br>" + E(h.Vendor) : "").Append("</td><td>");
+              .Append(E(h.Os?.Display ?? "")).Append(h.DeviceType != null || h.DeviceModel != null ? "<br><span class=\"muted\">" + E(string.Join(" · ", new[] { h.DeviceType, h.DeviceModel }.Where(x => x != null))) + "</span>" : "")
+              .Append("</td><td class=\"mono\">").Append(E(h.MacAddress ?? "")).Append(h.Vendor != null ? "<br>" + E(h.Vendor) : "").Append("</td><td>");
+            var named = h.Apps.Where(a => a.Category is not ("Network service" or "Web server" or "Windows services" or "Device info")).Select(a => a.Display).ToList();
+            if (named.Count > 0) sb.Append("<div><b>Apps:</b> ").Append(E(string.Join(", ", named))).Append("</div>");
             foreach (var p in h.OpenPorts) sb.Append("<div><span class=\"mono\">").Append(E(p.Label)).Append("</span> ").Append(E(p.Service?.Display ?? "")).Append("</div>");
             sb.Append("</td><td>").Append(h.Findings.Count(f => f.Status == FindingStatus.Open)).Append("</td></tr>");
         }
@@ -185,7 +188,7 @@ public static class CsvExporter
     public static string Hosts(ScanResult scan)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Address,HostName,NetBIOS,MAC,Vendor,OS,OSConfidence,Port,Protocol,Service,Product,Version,TLS,OpenFindings");
+        sb.AppendLine("Address,HostName,NetBIOS,MAC,Vendor,OS,OSConfidence,Port,Protocol,Service,Product,Version,TLS,OpenFindings,DeviceType,DeviceModel,Apps");
         foreach (var h in scan.LiveHosts)
         {
             var ports = h.OpenPorts.ToList();
@@ -197,7 +200,8 @@ public static class CsvExporter
                     h.Address, h.HostName ?? "", h.NetBiosName ?? "", h.MacAddress ?? "", h.Vendor ?? "", h.Os?.Display ?? "", h.Os?.Confidence.ToString(CultureInfo.InvariantCulture) ?? "",
                     p?.Port.ToString(CultureInfo.InvariantCulture) ?? "", p == null ? "" : p.Protocol.ToString().ToLowerInvariant(), p?.Service?.Name ?? "",
                     p?.Service?.Product ?? "", p?.Service?.Version ?? "", p?.Tls != null ? string.Join(' ', p.Tls.Protocols) : "",
-                    h.Findings.Count(f => f.Status == FindingStatus.Open).ToString(CultureInfo.InvariantCulture)
+                    h.Findings.Count(f => f.Status == FindingStatus.Open).ToString(CultureInfo.InvariantCulture),
+                    h.DeviceType ?? "", h.DeviceModel ?? "", string.Join("; ", h.Apps.Select(a => a.Display))
                 }.Select(Escape));
                 sb.AppendLine();
             }

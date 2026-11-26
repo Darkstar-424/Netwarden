@@ -86,7 +86,7 @@ public sealed class ScanViewModel : ObservableObject, IScanObserver
 
     // ---- Profile editor (Advanced mode) ----
     private string _ports = "", _portsError = "";
-    private bool _udp, _tls, _svc, _vuln, _safe, _anon, _assumeUp, _os, _icmp, _tcpPing;
+    private bool _udp, _tls, _svc, _vuln, _safe, _anon, _assumeUp, _os, _apps, _icmp, _tcpPing;
     private TimingTemplate _timing;
     private int? _concurrency, _timeoutMs, _rate;
 
@@ -101,6 +101,7 @@ public sealed class ScanViewModel : ObservableObject, IScanObserver
     public bool AnonymousChecks { get => _anon; set => Set(ref _anon, value); }
     public bool AssumeUp { get => _assumeUp; set => Set(ref _assumeUp, value); }
     public bool OsDetection { get => _os; set => Set(ref _os, value); }
+    public bool IdentifyApps { get => _apps; set => Set(ref _apps, value); }
     public bool IcmpPing { get => _icmp; set => Set(ref _icmp, value); }
     public bool TcpPing { get => _tcpPing; set => Set(ref _tcpPing, value); }
     public TimingTemplate Timing { get => _timing; set { if (Set(ref _timing, value)) Raise(nameof(TimingText)); } }
@@ -127,6 +128,7 @@ public sealed class ScanViewModel : ObservableObject, IScanObserver
         AnonymousChecks = p.AllowAnonymousLoginChecks;
         AssumeUp = p.TreatAllHostsAsUp;
         OsDetection = p.OsDetection;
+        IdentifyApps = p.IdentifyApps;
         IcmpPing = p.IcmpPing;
         TcpPing = p.TcpPing;
         Timing = p.Timing;
@@ -150,6 +152,7 @@ public sealed class ScanViewModel : ObservableObject, IScanObserver
         p.AllowAnonymousLoginChecks = AnonymousChecks;
         p.TreatAllHostsAsUp = AssumeUp;
         p.OsDetection = OsDetection;
+        p.IdentifyApps = IdentifyApps;
         p.IcmpPing = IcmpPing;
         p.TcpPing = TcpPing;
         p.Timing = Timing;

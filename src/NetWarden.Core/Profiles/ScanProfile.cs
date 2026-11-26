@@ -41,6 +41,8 @@ public sealed class ScanProfile
     public bool ServiceDetection { get; set; } = true;
     public bool TlsInspection { get; set; } = true;
     public bool OsDetection { get; set; } = true;
+    /// <summary>Identify apps and device models: web-app fingerprints, Bonjour/mDNS and UPnP device descriptions.</summary>
+    public bool IdentifyApps { get; set; } = true;
 
     // Vulnerability assessment
     public bool VulnerabilityChecks { get; set; } = true;

@@ -56,7 +56,9 @@ public sealed class HostsViewModel : ObservableObject
         Hosts.Reset(f.Length == 0 ? _all : _all.Where(h =>
             h.Address.Contains(f, StringComparison.OrdinalIgnoreCase) || h.Name.Contains(f, StringComparison.OrdinalIgnoreCase) ||
             h.Os.Contains(f, StringComparison.OrdinalIgnoreCase) || h.Vendor.Contains(f, StringComparison.OrdinalIgnoreCase) ||
-            h.Services.Contains(f, StringComparison.OrdinalIgnoreCase) || h.OpenPorts.Split(", ").Contains(f)));
+            h.Services.Contains(f, StringComparison.OrdinalIgnoreCase) || h.OpenPorts.Split(", ").Contains(f) ||
+            h.DeviceDetail.Contains(f, StringComparison.OrdinalIgnoreCase) ||
+            h.Model.Apps.Any(a => a.Name.Contains(f, StringComparison.OrdinalIgnoreCase) || a.Category.Contains(f, StringComparison.OrdinalIgnoreCase))));
     }
 }
 

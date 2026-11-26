@@ -1,3 +1,4 @@
+using NetWarden.Core.Fingerprinting;
 using System.Net;
 using System.Net.Sockets;
 using NetWarden.Core.Models;
@@ -231,7 +232,8 @@ public sealed class UdpProber
         var resp = await _probe.UdpExchangeAsync(host, 1900, SsdpPackets.MSearch(host), _timeout, ct).ConfigureAwait(false);
         var server = resp == null ? null : SsdpPackets.ParseServer(resp);
         if (server == null) return null;
-        return new UdpProbeResult(1900, "ssdp", string.IsNullOrEmpty(server) ? "UPnP/SSDP responder" : $"UPnP: {server}",
-            new Dictionary<string, string> { ["ssdp.server"] = server }, resp!);
+        var facts = new Dictionary<string, string> { ["ssdp.server"] = server };
+        if (UpnpDescription.Location(System.Text.Encoding.ASCII.GetString(resp!)) is string loc) facts["ssdp.location"] = loc;
+        return new UdpProbeResult(1900, "ssdp", string.IsNullOrEmpty(server) ? "UPnP/SSDP responder" : $"UPnP: {server}", facts, resp!);
     }
 }
