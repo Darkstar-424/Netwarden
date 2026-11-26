@@ -174,6 +174,13 @@ Bundles carry a SHA-256 manifest that is verified before import.
 - TLS inspection with raw ClientHello probes: SSLv2/3, TLS 1.0–1.3, cipher suites, DH group size, certificate details
 - OS guess from TTL, ports and banners, with its basis and confidence shown
 
+**Apps and device identification** (on by default; "Identify apps and device models" in Advanced settings)
+- **Web apps and admin pages:** 87 signatures matched against the page NetWarden already fetched (title, headers, cookies, page markers). One redirect is followed only if it stays on the same device and port, to reach a login page. Examples include NAS units (Synology, QNAP, TrueNAS, Unraid), hypervisors (Proxmox, ESXi), Home Assistant, Plex/Jellyfin, Pi-hole, routers and firewalls (UniFi, pfSense, OPNsense, OpenWrt, NETGEAR, TP-Link, ASUS), printers (HP, Brother, Canon, Epson), cameras (Hikvision, Dahua, Axis), Jenkins, GitLab, Grafana, Portainer, Webmin, iLO and iDRAC. A version that can be read reliably (Jenkins, Grafana, Webmin, Kibana, WordPress, Tomcat) is fed into CVE matching.
+- **Bonjour / mDNS:** asks each device which services it advertises (AirPlay, Google Cast, printers and scanners, SMB, Time Machine, HomeKit and Matter, SSH and more). The answers include the device's model and name.
+- **UPnP:** reads the device description at the address the device itself gives in its SSDP reply. That address is only fetched if it is the device being scanned. The description gives the manufacturer, model, friendly name and roles (internet gateway or port forwarding, media server or renderer, printer).
+- **Result:** each device gets a device type (Printer, NAS, Router, Media player, Camera, Windows computer, Domain controller and so on), a make and model where available, and a readable "Apps and services" list. The list appears in the Devices view and in the HTML, PDF and CSV reports.
+- **No sign-in:** this uses the same discovery your phone or printer dialog uses, so it only sees what devices advertise or expose on the network. Installed programs that don't listen on the network can only be listed with a signed-in (credentialed) inventory, which NetWarden does not do yet.
+
 **Vulnerability checks.** Each one is a separate class or JSON template.
 
 | Area | Checks |

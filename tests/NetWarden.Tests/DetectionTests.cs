@@ -209,6 +209,7 @@ public class DetectionTests
             Assert.Equal(port, open.Port);
             Assert.Equal("ftp", open.Service!.Name);
             Assert.Contains(host.Findings, f => f.CheckId == "svc.ftp-cleartext");
+            Assert.Contains(host.Apps, a => a.Name.StartsWith("FTP file transfer", StringComparison.Ordinal) && a.Where == $"{port}/tcp");
         }
         finally
         {
